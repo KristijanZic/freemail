@@ -1,0 +1,18 @@
+[package]
+name = "freemail"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = "0.4.0"
+dioxus-web = "0.4.0"
+dioxus-material-icons = { git = "https://github.com/jkelleyrtp/dioxus-material-icons.git", branch = "jk/bump-release" }
+# dioxus-free-icons = { version = "0.7.0", features = [
+#     "ionicons",
+#     "material-design-icons-content",
+#     "font-awesome-regular",
+#     "font-awesome-brands",
+#     "bootstrap",
+# ] }
