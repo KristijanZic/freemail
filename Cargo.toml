@@ -9,10 +9,3 @@ edition = "2021"
 dioxus = "0.4.0"
 dioxus-web = "0.4.0"
 dioxus-material-icons = { git = "https://github.com/jkelleyrtp/dioxus-material-icons.git", branch = "jk/bump-release" }
-# dioxus-free-icons = { version = "0.7.0", features = [
-#     "ionicons",
-#     "material-design-icons-content",
-#     "font-awesome-regular",
-#     "font-awesome-brands",
-#     "bootstrap",
-# ] }

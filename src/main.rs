@@ -1,18 +1,7 @@
 #![allow(non_snake_case)]
 
 use dioxus::prelude::*;
-use dioxus_material_icons::{
-    MaterialIcon, MaterialIconColor, MaterialIconStylesheet, MaterialIconVariant,
-};
-
-// use dioxus_free_icons::{
-//     icons::{
-//         bs_icons::BsList,
-//         fa_regular_icons::FaEnvelope,
-//         io_icons::{IoMailOutline, IoSendOutline},
-//     },
-//     Icon,
-// };
+use dioxus_material_icons::{MaterialIcon, MaterialIconStylesheet, MaterialIconVariant};
 
 struct IsLoggedIn(bool);
 struct IsMenuOpened(bool);
@@ -49,12 +38,6 @@ fn LoginScreen(cx: Scope) -> Element {
 fn LoginContainer(cx: Scope) -> Element {
     cx.render(rsx! {
         div { class: "login_container",
-            // Icon {
-            //     width: 50,
-            //     height: 50,
-            //     fill: "black",
-            //     icon: IoMailOutline,
-            // }
             MaterialIcon { name: "email", size: 80, color: "#000000" }
             h1 {
                 padding: "0",
@@ -138,10 +121,14 @@ fn Inbox(cx: Scope) -> Element {
     let is_menu_opened_context = use_shared_state::<IsMenuOpened>(cx).unwrap();
 
     let is_opened = if is_menu_opened_context.read().0 {
-        // Render material icon "home" in blue
         "inbox__submenu-list__opened"
     } else {
-        // Render material icon "home" in default color
+        ""
+    };
+
+    let is_content_opened = if is_menu_opened_context.read().0 {
+        "inbox__content_opened"
+    } else {
         ""
     };
 
@@ -150,23 +137,13 @@ fn Inbox(cx: Scope) -> Element {
             // style:"{inbox_style}",
             class: "inbox",
             div { class: "inbox__menu-button",
-                // Icon {
-                //     width: 40,
-                //     // height: 40,
-                //     fill: "#8da2b5",
-                //     icon: FaEnvelope,
-                // }
                 MaterialIcon { name: "mail", size: 24, color: "#8da2b5" }
             }
-            // div {
-            //     class:"inbox__settings-list",
-            // }
+
             div { class: "inbox__menu-list" }
             div { class: "inbox__submenu-list {is_opened}" }
-            div { class: "inbox__content",
+            div { class: "inbox__content {is_content_opened}",
                 div { class: "emails",
-                    // width: "260px",
-                    // max_width: "260px",
                     div {
                         display: "flex",
                         align_items: "center",
@@ -251,73 +228,12 @@ fn HamburgerButton(cx: Scope) -> Element {
                 let is_enabled = is_menu_opened_context.write().0 == true;
                 is_menu_opened_context.write().0 = !is_enabled;
             },
-            // Icon {
-            //     width: 30,
-            //     height: 30,
-            //     fill: "#62778c",
-            //     icon: BsList,
-            // }
 
             MaterialIcon {
                 name: if is_menu_opened_context.read().0 { "close" } else { "menu" },
                 size: 24,
                 color: "#62778c"
             }
-        }
-    ))
-}
-
-fn ButtonPrimary(cx: Scope) -> Element {
-    let is_blue = use_state(&cx, || false);
-
-    cx.render(rsx! {
-        a { href: "https://www.google.com", class: "button-primary", color: "blue", "Go To Link" }
-        button {
-            style: "padding: 10; font-size: 48px;",
-            onclick: move |_| is_blue.set(!is_blue),
-            // The size prop was omitted, so both icons inherit their size from the button element above
-            if *is_blue.get() {
-                // Render material icon "home" in blue
-                rsx!(
-                // Icon {
-                //     width: 30,
-                //     height: 30,
-                //     fill: "black",
-                //     icon: IoMailOutline,
-                // }
-                MaterialIcon {
-                    name: "settings",
-                    size: 24,
-                    color: MaterialIconColor::Light,
-                }
-            )
-            } else {
-                // Render material icon "home" in default color
-                rsx!(
-                // Icon {
-                //     width: 30,
-                //     height: 30,
-                //     fill: "black",
-                //     icon: IoSendOutline ,
-                // }
-                MaterialIcon {
-                    name: "settings",
-                    size: 24,
-                    color: MaterialIconColor::Light,
-                }
-            )
-            }
-        }
-    })
-}
-
-// Children
-fn _ordered_list_children(cx: Scope) -> Element {
-    cx.render(rsx!(
-        ol {
-            li { "First Item" }
-            li { "Second Item" }
-            li { "Third Item" }
         }
     ))
 }
