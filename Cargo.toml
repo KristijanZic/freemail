@@ -9,3 +9,6 @@ edition = "2021"
 dioxus = "0.4.0"
 dioxus-web = "0.4.0"
 dioxus-material-icons = { git = "https://github.com/jkelleyrtp/dioxus-material-icons.git", branch = "jk/bump-release" }
+log = "0.4.20"
+wasm-logger = "0.2.0"
+chrono = "0.4.30"
