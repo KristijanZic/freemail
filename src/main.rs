@@ -1,5 +1,6 @@
 #![allow(non_snake_case)]
 
+use chrono::{DateTime, Duration, Local, Utc};
 use dioxus::prelude::*;
 use dioxus_material_icons::{MaterialIcon, MaterialIconStylesheet, MaterialIconVariant};
 
@@ -7,26 +8,27 @@ struct IsLoggedIn(bool);
 struct IsMenuOpened(bool);
 
 fn main() {
+    wasm_logger::init(wasm_logger::Config::default());
+    log::info!("sup");
+
     dioxus_web::launch(App);
 }
 
 fn App(cx: Scope) -> Element {
-    // TODO: Investigate errors when changing IsLoggedIn state.
-    use_shared_state_provider(cx, || IsLoggedIn(false));
+    use_shared_state_provider(cx, || IsLoggedIn(true));
     use_shared_state_provider(cx, || IsMenuOpened(true));
 
     let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
 
-    cx.render(rsx! (
+    cx.render(rsx! {
+            MaterialIconStylesheet { variant: MaterialIconVariant::Outlined }
 
-        MaterialIconStylesheet { variant: MaterialIconVariant::Outlined }
-
-        if is_logged_in_context.read().0 {
-            Inbox(cx)
-        } else {
-            LoginScreen(cx)
-        }
-    ))
+            if is_logged_in_context.read().0 {
+                rsx!{Inbox{}}
+            } else {
+                rsx!{LoginScreen{}}
+            }
+    })
 }
 
 fn LoginScreen(cx: Scope) -> Element {
@@ -121,7 +123,7 @@ fn Inbox(cx: Scope) -> Element {
     let is_menu_opened_context = use_shared_state::<IsMenuOpened>(cx).unwrap();
 
     let is_opened = if is_menu_opened_context.read().0 {
-        "inbox__submenu-list__opened"
+        "menu_wrapper__opened"
     } else {
         ""
     };
@@ -136,12 +138,13 @@ fn Inbox(cx: Scope) -> Element {
         div {
             // style:"{inbox_style}",
             class: "inbox",
-            div { class: "inbox__menu-button",
-                MaterialIcon { name: "mail", size: 24, color: "#8da2b5" }
+
+            div { class: "menu_wrapper {is_opened}",
+                div { class: "inbox__menu-button", MaterialIcon { name: "mail", size: 24, color: "#8da2b5" } }
+                div { class: "inbox__menu-list" }
+                div { class: "inbox__submenu-list " }
             }
 
-            div { class: "inbox__menu-list" }
-            div { class: "inbox__submenu-list {is_opened}" }
             div { class: "inbox__content {is_content_opened}",
                 div { class: "emails",
                     div {
@@ -150,7 +153,9 @@ fn Inbox(cx: Scope) -> Element {
                         border_bottom: "1.2px solid #e0e5eb",
                         padding: "16px",
                         HamburgerButton(cx),
-                        span { padding: "20px", "Uncategorised" }
+                        span { 
+                            padding_left: "20px", 
+                            "Uncategorised" }
                     }
                     div {
                         display: "flex",
@@ -161,25 +166,26 @@ fn Inbox(cx: Scope) -> Element {
                         font_size: "11px",
                         color: "#62778c",
                         div { display: "flex", align_items: "center",
-                            MaterialIcon { name: "inbox", size: 16, color: "#62778c" }
+                            // MaterialIcon { name: "inbox", size: 16, color: "#62778c" }
+                            MaterialIcon { name: "filter_alt", size: 16, color: "#62778c" }
                             span { padding_left: "5px", "Open (20) ▾" }
                         }
                         div { span { "Newest ▴" } }
                     }
 
                     div { display: "block", overflow: "scroll", cursor: "pointer",
-                        (0..60).map(|i| rsx!{div {
-                            class: "email_preview",
-                            display: "flex",
-                            align_items: "center",
-                            padding: "16px",
-                            border_bottom: "0.7px solid #e0e5eb",
-                            "Email {i}",
-                        }})
+                        (0..60).map(|i| rsx!{
+                           EmailTile{
+                            sender: "Jane Doe".to_string(),
+                            title: String::from(format!("New meeting with the corporate tomorrow")),
+                            paragraph: "Paragraph".to_string(),
+                            timestamp: Utc::now() - Duration::minutes(i),
+                           }
+                        })
                     }
                 }
                 div {
-                    class: "emails",
+                    class: "email",
                     border_left: "1.2px solid #e0e5eb",
                     border_right: "1.2px solid #e0e5eb",
                     div {
@@ -187,13 +193,94 @@ fn Inbox(cx: Scope) -> Element {
                         align_items: "center",
                         border_bottom: "1.2px solid #e0e5eb",
                         padding: "16px",
-                        span { padding: "20px", "john.doe@example.com" }
+                        span { padding: "20px", "jane.doe@example.com" }
                     }
                 }
-                div { class: "emails", div { border_bottom: "1.2px solid #e0e5eb" } }
+                div { class: "email_details", div { border_bottom: "1.2px solid #e0e5eb" } }
             }
         }
     })
+}
+
+#[derive(Props, PartialEq)]
+struct EmailProps {
+    sender: String,
+    title: String,
+    paragraph: String,
+    timestamp: DateTime<Utc>,
+}
+
+fn EmailTile(cx: Scope<EmailProps>) -> Element {
+    let end_time = Utc::now().time();
+    let diff = end_time - cx.props.timestamp.time();
+
+    cx.render(rsx!(div {
+        class: "email_tile",
+        
+        Avatar{
+            is_online: true,
+        }
+        div {
+            width: "100%",
+            padding_left: "16px",
+        div {
+            class: "sender",
+            div {b{"{cx.props.sender}"}}
+            div {format!("{}m",diff.num_minutes())}
+        }
+        div {
+            // class: "title",
+            "{cx.props.title}"
+        }
+    }
+
+    }))
+}
+
+#[derive(Props, PartialEq)]
+struct AvatarProps {
+    is_online: bool,
+}
+
+fn Avatar(cx: Scope<AvatarProps>) -> Element {
+    let avatar_style = r#"
+    position:relative;
+    display:inline-block;
+    width:45px;
+    height:45px;
+    "#;
+
+    let avatar__image_style = r#"
+    width:45px;
+    height:45px;
+    object-fit:cover;
+    border-radius:100%;
+    "#;
+
+    let avatar__status_style = r#"
+    width:12px;
+    height:12px;
+    background:#99CC00;
+    border:2px solid white;
+    position:absolute;
+    bottom:1.5%;
+    right:1.5%;
+    border-radius:100%;
+    "#;
+    cx.render(rsx!(div {
+        class: "avatar",
+        style: "{avatar_style}",
+        img {
+            class: "avatar__image",
+            style: "{avatar__image_style}",
+            src:"https://images.unsplash.com/photo-1542103749-8ef59b94f47e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80",
+            alt:"Avatar image"
+        }
+        span {
+            class: "avatar__status",
+            style: "{avatar__status_style}",
+        }
+    }))
 }
 
 fn Button(cx: Scope) -> Element {
@@ -218,12 +305,14 @@ fn HamburgerButton(cx: Scope) -> Element {
     let inbox_style = r#"
     // width:60px;
     cursor: pointer;
+    height: 24px;
     "#;
 
     cx.render(rsx! (
         a {
             style: "{inbox_style}",
             border_radius: "6px",
+            
             onclick: move |_| {
                 let is_enabled = is_menu_opened_context.write().0 == true;
                 is_menu_opened_context.write().0 = !is_enabled;
@@ -237,3 +326,62 @@ fn HamburgerButton(cx: Scope) -> Element {
         }
     ))
 }
+
+#[derive(Props, PartialEq)]
+struct GreetPersonProps {
+    person: String,
+}
+
+#[allow(non_snake_case)]
+fn GreetPerson<'a>(cx: Scope<'a, GreetPersonProps>) -> Element {
+    __greet_person(cx)
+}
+
+#[inline(always)]
+fn __greet_person<'a>(cx: Scope<'a, GreetPersonProps>) -> Element {
+    let GreetPersonProps { person } = &cx.props;
+    {
+        render! {"hello, {person}"}
+    }
+}
+
+// fn App(cx: Scope) -> Element {
+//     let drawer_state = use_state(cx, || false);
+
+//     let is_blue = use_state(cx, || true);
+
+//     let color = if *is_blue.get() { "blue" } else { "red" };
+
+//     // log::info!("Some info");
+//     // log::error!("Error message");
+
+//     cx.render(rsx! {
+//         div {
+//             div {
+//                 key: "drawer",
+//                 class: "drawer",
+//                 background_color: "{color}",
+//                 height: "150px",
+//                 width: "150px",
+//                 draggable: "true",
+
+//                 ontouchstart: move |event| {
+//                     is_blue.set(!is_blue);
+//                     let x = event.data;
+//                     log::info!("OnTouchStart: {:#?}", x);
+//                 },
+//                 ontouchmove: move |event| {
+//                     let x = event.data;
+//                     log::info!("OnTouchMove: {:#?}", x);
+//                 },
+//                 ontouchend: move |event| {
+//                     let x = event.data;
+//                     log::info!("OnTouchEnd: {:#?}", x);
+//                 },
+
+//                 p { "This is the drawer" }
+//             }
+//             div { key: "content", class: "content", p { "This is the main content" } }
+//         }
+//     })
+// }
