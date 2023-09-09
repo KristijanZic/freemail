@@ -21,13 +21,13 @@ fn App(cx: Scope) -> Element {
     let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
 
     cx.render(rsx! {
-            MaterialIconStylesheet { variant: MaterialIconVariant::Outlined }
+        MaterialIconStylesheet { variant: MaterialIconVariant::Outlined }
 
-            if is_logged_in_context.read().0 {
-                rsx!{Inbox{}}
-            } else {
-                rsx!{LoginScreen{}}
-            }
+        if is_logged_in_context.read().0 {
+            rsx!{Inbox{}}
+        } else {
+            rsx!{LoginScreen{}}
+        }
     })
 }
 
@@ -153,9 +153,7 @@ fn Inbox(cx: Scope) -> Element {
                         border_bottom: "1.2px solid #e0e5eb",
                         padding: "16px",
                         HamburgerButton(cx),
-                        span { 
-                            padding_left: "20px", 
-                            "Uncategorised" }
+                        span { padding_left: "20px", "Uncategorised" }
                     }
                     div {
                         display: "flex",
@@ -175,12 +173,12 @@ fn Inbox(cx: Scope) -> Element {
 
                     div { display: "block", overflow: "scroll", cursor: "pointer",
                         (0..60).map(|i| rsx!{
-                           EmailTile{
+                        EmailTile{
                             sender: "Jane Doe".to_string(),
                             title: String::from(format!("New meeting with the corporate tomorrow")),
                             paragraph: "Paragraph".to_string(),
                             timestamp: Utc::now() - Duration::minutes(i),
-                           }
+                        }
                         })
                     }
                 }
@@ -214,27 +212,21 @@ fn EmailTile(cx: Scope<EmailProps>) -> Element {
     let end_time = Utc::now().time();
     let diff = end_time - cx.props.timestamp.time();
 
-    cx.render(rsx!(div {
-        class: "email_tile",
-        
-        Avatar{
-            is_online: true,
+    cx.render(rsx!(
+        div { class: "email_tile",
+            Avatar { is_online: true }
+            div { width: "100%", padding_left: "16px",
+                div { class: "sender",
+                    div { b { "{cx.props.sender}" } }
+                    div { format!("{}m",diff.num_minutes()) }
+                }
+                div {
+                    // class: "title",
+                    "{cx.props.title}"
+                }
+            }
         }
-        div {
-            width: "100%",
-            padding_left: "16px",
-        div {
-            class: "sender",
-            div {b{"{cx.props.sender}"}}
-            div {format!("{}m",diff.num_minutes())}
-        }
-        div {
-            // class: "title",
-            "{cx.props.title}"
-        }
-    }
-
-    }))
+    ))
 }
 
 #[derive(Props, PartialEq)]
@@ -243,44 +235,15 @@ struct AvatarProps {
 }
 
 fn Avatar(cx: Scope<AvatarProps>) -> Element {
-    let avatar_style = r#"
-    position:relative;
-    display:inline-block;
-    width:45px;
-    height:45px;
-    "#;
-
-    let avatar__image_style = r#"
-    width:45px;
-    height:45px;
-    object-fit:cover;
-    border-radius:100%;
-    "#;
-
-    let avatar__status_style = r#"
-    width:12px;
-    height:12px;
-    background:#99CC00;
-    border:2px solid white;
-    position:absolute;
-    bottom:1.5%;
-    right:1.5%;
-    border-radius:100%;
-    "#;
-    cx.render(rsx!(div {
-        class: "avatar",
-        style: "{avatar_style}",
-        img {
-            class: "avatar__image",
-            style: "{avatar__image_style}",
-            src:"https://images.unsplash.com/photo-1542103749-8ef59b94f47e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80",
-            alt:"Avatar image"
+    cx.render(rsx!(
+        div { class: "avatar",
+            img {
+                src: "https://images.unsplash.com/photo-1542103749-8ef59b94f47e?ixlib=rb-1.2.1&ixid=eyJhcHBfaWQiOjEyMDd9&auto=format&fit=crop&w=1350&q=80",
+                alt: "Avatar image"
+            }
+            span { class: "online_status" }
         }
-        span {
-            class: "avatar__status",
-            style: "{avatar__status_style}",
-        }
-    }))
+    ))
 }
 
 fn Button(cx: Scope) -> Element {
@@ -312,7 +275,6 @@ fn HamburgerButton(cx: Scope) -> Element {
         a {
             style: "{inbox_style}",
             border_radius: "6px",
-            
             onclick: move |_| {
                 let is_enabled = is_menu_opened_context.write().0 == true;
                 is_menu_opened_context.write().0 = !is_enabled;
