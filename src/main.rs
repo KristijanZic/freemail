@@ -1,6 +1,6 @@
 #![allow(non_snake_case)]
 
-use chrono::{DateTime, Duration, Local, Utc};
+use chrono::{DateTime, Duration, Utc};
 use dioxus::prelude::*;
 use dioxus_material_icons::{MaterialIcon, MaterialIconStylesheet, MaterialIconVariant};
 
@@ -91,7 +91,7 @@ fn LoginForm(cx: Scope) -> Element {
         //     text_align: "right",
         //     "OR",
         // }
-        Button(cx)
+        Button { title: String::from("Create") }
     })
 }
 
@@ -182,18 +182,19 @@ fn Inbox(cx: Scope) -> Element {
                         })
                     }
                 }
-                div {
-                    class: "email",
-                    border_left: "1.2px solid #e0e5eb",
-                    border_right: "1.2px solid #e0e5eb",
-                    div {
-                        display: "flex",
-                        align_items: "center",
-                        border_bottom: "1.2px solid #e0e5eb",
-                        padding: "16px",
-                        span { padding: "20px", "jane.doe@example.com" }
-                    }
-                }
+                // div {
+                //     class: "email",
+                //     border_left: "1.2px solid #e0e5eb",
+                //     border_right: "1.2px solid #e0e5eb",
+                //     div {
+                //         display: "flex",
+                //         align_items: "center",
+                //         border_bottom: "1.2px solid #e0e5eb",
+                //         padding: "16px",
+                //         span { padding: "20px", "jane.doe@example.com" }
+                //     }
+                // }
+                EmailComposer { is_online: true }
                 div { class: "email_details", div { border_bottom: "1.2px solid #e0e5eb" } }
             }
         }
@@ -246,7 +247,136 @@ fn Avatar(cx: Scope<AvatarProps>) -> Element {
     ))
 }
 
-fn Button(cx: Scope) -> Element {
+#[derive(Props, PartialEq)]
+struct EmailComposerProps {
+    is_online: bool,
+}
+
+fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
+    cx.render(rsx!(
+        div {
+            class: "composer",
+            // class: "email",
+            border_left: "1.2px solid #e0e5eb",
+            border_right: "1.2px solid #e0e5eb",
+            div { display: "flex", align_items: "center", border_bottom: "1.2px solid #e0e5eb", padding: "16px",
+                span { padding: "20px", "New Message" }
+            }
+            div { padding: "10px 20px 30px 20px", border_bottom: "1.2px solid #e0e5eb",
+                div {
+                    width: "100%",
+                    display: "flex",
+                    "flex-direction": "row",
+                    "flex-wrap": "nowrap",
+                    padding: "0 16px 0 16px",
+                    label { "for": "from", "From" }
+                    div {
+                        // min_height: "3em",
+                        padding: "10px 16px 10px 16px",
+                        width: "100%",
+                        border_bottom: "1.2px solid #e0e5eb",
+                        input {
+                            "type": "email",
+                            name: "email",
+                            id: "email",
+                            placeholder: "john.doe@example.com"
+                        }
+                    }
+                }
+
+                div {
+
+                    width: "100%",
+
+                    display: "flex",
+
+                    "flex-direction": "row",
+
+                    "flex-wrap": "nowrap",
+
+                    padding: "0 16px 0 16px",
+                    label { "for": "email", "To" }
+                    div {
+                        display: "flex",
+
+                        "flex-direction": "row",
+
+                        "flex-wrap": "nowrap",
+                        // min_height: "3em",
+                        padding: "10px 6px 10px 16px",
+                        width: "100%",
+                        border_bottom: "1.2px solid #e0e5eb",
+                        input {
+                            "type": "email",
+                            name: "email",
+                            id: "email",
+                            placeholder: "Email address"
+                        }
+                        span { padding: "0 5px", "CC" }
+                        span { padding: "0 5px", "BCC" }
+                        a { cursor: "pointer", height: "18px", border_radius: "6px", padding: "0 10px",
+                            MaterialIcon { name: "person_add", size: 18, color: "#62778c" }
+                        }
+                    }
+                }
+
+                div {
+
+                    width: "100%",
+
+                    display: "flex",
+
+                    "flex-direction": "row",
+
+                    "flex-wrap": "nowrap",
+
+                    padding: "0 16px 0 16px",
+                    label { "for": "subject", "Subject" }
+                    div {
+                        // min_height: "3em",
+                        padding: "10px 16px 10px 16px",
+                        width: "100%",
+                        border_bottom: "1.2px solid #e0e5eb",
+                        input {
+                            "type": "subject",
+                            name: "subject",
+                            id: "subject",
+                            placeholder: "Subject"
+                        }
+                    }
+                }
+            }
+            textarea { placeholder: "A quick brown fox jumped over the lazy dog..." }
+            div {
+                width: "100%",
+                display: "flex",
+                "flex-direction": "row",
+                "flex-wrap": "nowrap",
+                align_items: "center",
+                border_top: "1.2px solid #e0e5eb",
+                padding: "16px 30px 24px 30px",
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "delete", size: 24, color: "#62778c" }
+                }
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "enhanced_encryption", size: 24, color: "#62778c" }
+                }
+                div { width: "200%" }
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "attach_file", size: 24, color: "#62778c" }
+                }
+                Button { title: String::from("Send") }
+            }
+        }
+    ))
+}
+
+#[derive(Props, PartialEq)]
+struct ButtonProps {
+    title: String,
+}
+
+fn Button(cx: Scope<ButtonProps>) -> Element {
     let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
 
     cx.render(rsx! (
@@ -257,7 +387,7 @@ fn Button(cx: Scope) -> Element {
             onclick: move |_| {
                 is_logged_in_context.write().0 = true;
             },
-            "Create"
+            "{cx.props.title}"
         }
     ))
 }

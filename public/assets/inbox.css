@@ -123,7 +123,8 @@
 
 .emails,
 .email,
-.email_details {
+.email_details,
+.composer {
   height: 100dvh;
   display: grid;
   grid-template-rows: 60px auto 1fr;
@@ -134,6 +135,10 @@
 }
 
 .email_details {
+  visibility: hidden;
+}
+
+.composer {
   visibility: hidden;
 }
 
@@ -186,7 +191,7 @@
 }
 
 .composer {
-  background: var(--background-norm);
+  /* background: var(--background-norm);
   border-bottom-left-radius: 0;
   border-bottom-right-radius: 0;
   bottom: 0;
@@ -200,7 +205,35 @@
   transform: translateX(var(--composer-drag-offset));
   transition: 0.15s cubic-bezier(0.22, 1, 0.36, 1), transform 0s;
   width: 40rem;
-  z-index: 401;
+  z-index: 401; */
+
+
+
+  & label {
+    width: 15%;
+    display: flex;
+    align-items: center;
+    /* font-weight: bold; */
+  }
+
+  & input {
+    width: 100%;
+
+    text-transform: none;
+    text-indent: 0px;
+    text-shadow: none;
+    display: inline-block;
+    text-align: start;
+    border: none;
+    outline: none;
+    /* border-bottom: 1px solid #ccc; */
+  }
+
+  & textarea {
+    padding: 40px;
+    border: none;
+    outline: none;
+  }
 }
 
 /* 
@@ -257,6 +290,10 @@ Desktop
   }
 
   .email_details {
+    visibility: visible;
+  }
+
+  .composer {
     visibility: visible;
   }
 }
