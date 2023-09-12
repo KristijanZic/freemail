@@ -14,9 +14,17 @@ fn main() {
     dioxus_web::launch(App);
 }
 
+#[derive(Clone, Copy)]
+enum IsOpened {
+    EmailComposer,
+    Email,
+    None,
+}
+
 fn App(cx: Scope) -> Element {
     use_shared_state_provider(cx, || IsLoggedIn(true));
     use_shared_state_provider(cx, || IsMenuOpened(true));
+    use_shared_state_provider(cx, || IsOpened::None);
 
     let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
 
@@ -121,6 +129,13 @@ fn Inbox(cx: Scope) -> Element {
     // background: #fff;
     // "#;
     let is_menu_opened_context = use_shared_state::<IsMenuOpened>(cx).unwrap();
+    let middle_view = use_shared_state::<IsOpened>(cx).unwrap();
+
+    let is_middle_view_opened = match *middle_view.read() {
+        IsOpened::Email => "is_middle_view_opened",
+        IsOpened::EmailComposer => "is_middle_view_opened",
+        IsOpened::None => "",
+    };
 
     let is_opened = if is_menu_opened_context.read().0 {
         "menu_wrapper__opened"
@@ -139,27 +154,37 @@ fn Inbox(cx: Scope) -> Element {
             // style:"{inbox_style}",
             class: "inbox",
 
-            div { class: "menu_wrapper {is_opened}",
+            header { class: "menu_wrapper {is_opened}",
                 div { class: "inbox__menu-button", MaterialIcon { name: "mail", size: 24, color: "#8da2b5" } }
-                div { class: "inbox__menu-list" }
+                div { class: "inbox__menu-list",
+                    div {
+                        onclick: move |_| {
+                            *middle_view.write() = IsOpened::EmailComposer;
+                        },
+                        MaterialIcon { name: "add", size: 24, color: "#8da2b5" }
+                    }
+                    div {
+                        grid_row: "-2",
+                        onclick: move |_| {
+                            *middle_view.write() = IsOpened::EmailComposer;
+                        },
+                        MaterialIcon { name: "settings", size: 24, color: "#8da2b5" }
+                    }
+                }
                 div { class: "inbox__submenu-list " }
             }
 
-            div { class: "inbox__content {is_content_opened}",
+            main { class: "inbox__content {is_content_opened} {is_middle_view_opened}",
                 div { class: "emails",
-                    div {
-                        display: "flex",
-                        align_items: "center",
-                        border_bottom: "1.2px solid #e0e5eb",
-                        padding: "16px",
+                    div { class: "border_bottom", display: "flex", align_items: "center", padding: "16px",
                         HamburgerButton(cx),
                         span { padding_left: "20px", "Uncategorised" }
                     }
                     div {
+                        class: "border_bottom",
                         display: "flex",
                         justify_content: "space-between",
                         align_items: "center",
-                        border_bottom: "1.2px solid #e0e5eb",
                         padding: "8px 16px 8px 16px",
                         font_size: "11px",
                         color: "#62778c",
@@ -182,20 +207,12 @@ fn Inbox(cx: Scope) -> Element {
                         })
                     }
                 }
-                // div {
-                //     class: "email",
-                //     border_left: "1.2px solid #e0e5eb",
-                //     border_right: "1.2px solid #e0e5eb",
-                //     div {
-                //         display: "flex",
-                //         align_items: "center",
-                //         border_bottom: "1.2px solid #e0e5eb",
-                //         padding: "16px",
-                //         span { padding: "20px", "jane.doe@example.com" }
-                //     }
-                // }
-                EmailComposer { is_online: true }
-                div { class: "email_details", div { border_bottom: "1.2px solid #e0e5eb" } }
+                match *middle_view.read() {
+                    IsOpened::EmailComposer => rsx!{EmailComposer { is_online: true }},
+                    IsOpened::Email => rsx!{EmailReader { is_online: true }},
+                    IsOpened::None => rsx!{""},
+                    // _ => rsx!{""},
+                }
             }
         }
     })
@@ -212,14 +229,19 @@ struct EmailProps {
 fn EmailTile(cx: Scope<EmailProps>) -> Element {
     let end_time = Utc::now().time();
     let diff = end_time - cx.props.timestamp.time();
+    let middle_view = use_shared_state::<IsOpened>(cx).unwrap();
 
     cx.render(rsx!(
-        div { class: "email_tile",
+        div {
+            class: "email_tile",
+            onclick: move |_| {
+                *middle_view.write() = IsOpened::Email;
+            },
             Avatar { is_online: true }
             div { width: "100%", padding_left: "16px",
                 div { class: "sender",
                     div { b { "{cx.props.sender}" } }
-                    div { format!("{}m",diff.num_minutes()) }
+                    div { color: "#62778c", font_size: "13px", format!("{}m",diff.num_minutes()) }
                 }
                 div {
                     // class: "title",
@@ -254,15 +276,14 @@ struct EmailComposerProps {
 
 fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
     cx.render(rsx!(
-        div {
-            class: "composer",
-            // class: "email",
-            border_left: "1.2px solid #e0e5eb",
-            border_right: "1.2px solid #e0e5eb",
-            div { display: "flex", align_items: "center", border_bottom: "1.2px solid #e0e5eb", padding: "16px",
+        div { class: "composer",
+            div { class: "border_bottom", display: "flex", align_items: "center", padding: "16px",
+                HamburgerButton {}
+                div { width: "16px" }
+                CloseBackButton {}
                 span { padding: "20px", "New Message" }
             }
-            div { padding: "10px 20px 30px 20px", border_bottom: "1.2px solid #e0e5eb",
+            div { class: "border_bottom", padding: "10px 20px 30px 20px",
                 div {
                     width: "100%",
                     display: "flex",
@@ -271,10 +292,10 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
                     padding: "0 16px 0 16px",
                     label { "for": "from", "From" }
                     div {
+                        class: "border_bottom",
                         // min_height: "3em",
                         padding: "10px 16px 10px 16px",
                         width: "100%",
-                        border_bottom: "1.2px solid #e0e5eb",
                         input {
                             "type": "email",
                             name: "email",
@@ -297,6 +318,7 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
                     padding: "0 16px 0 16px",
                     label { "for": "email", "To" }
                     div {
+                        class: "border_bottom",
                         display: "flex",
 
                         "flex-direction": "row",
@@ -305,7 +327,6 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
                         // min_height: "3em",
                         padding: "10px 6px 10px 16px",
                         width: "100%",
-                        border_bottom: "1.2px solid #e0e5eb",
                         input {
                             "type": "email",
                             name: "email",
@@ -333,10 +354,10 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
                     padding: "0 16px 0 16px",
                     label { "for": "subject", "Subject" }
                     div {
+                        class: "border_bottom",
                         // min_height: "3em",
                         padding: "10px 16px 10px 16px",
                         width: "100%",
-                        border_bottom: "1.2px solid #e0e5eb",
                         input {
                             "type": "subject",
                             name: "subject",
@@ -348,12 +369,12 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
             }
             textarea { placeholder: "A quick brown fox jumped over the lazy dog..." }
             div {
+                class: "border_top",
                 width: "100%",
                 display: "flex",
                 "flex-direction": "row",
                 "flex-wrap": "nowrap",
                 align_items: "center",
-                border_top: "1.2px solid #e0e5eb",
                 padding: "16px 30px 24px 30px",
                 a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
                     MaterialIcon { name: "delete", size: 24, color: "#62778c" }
@@ -372,6 +393,28 @@ fn EmailComposer(cx: Scope<EmailComposerProps>) -> Element {
 }
 
 #[derive(Props, PartialEq)]
+struct EmailReaderProps {
+    is_online: bool,
+}
+
+fn EmailReader(cx: Scope<EmailReaderProps>) -> Element {
+    cx.render(rsx!(
+        div { class: "email",
+            div { class: "border_bottom", display: "flex", align_items: "center", padding: "16px",
+                CloseBackButton {}
+                span { padding_left: "20px", "jane.doe@example.com" }
+            }
+        }
+    ))
+}
+
+fn EmailDetails(cx: Scope) -> Element {
+    cx.render(rsx!(
+        div { class: "email_details", div { class: "border_bottom" } }
+    ))
+}
+
+#[derive(Props, PartialEq)]
 struct ButtonProps {
     title: String,
 }
@@ -382,6 +425,27 @@ fn Button(cx: Scope<ButtonProps>) -> Element {
     cx.render(rsx! (
         button {
             class: "btn btn-primary",
+            width: "100%",
+            border_radius: "6px",
+            onclick: move |_| {
+                is_logged_in_context.write().0 = true;
+            },
+            "{cx.props.title}"
+        }
+    ))
+}
+
+#[derive(Props, PartialEq)]
+struct FloatingButtonProps {
+    title: String,
+}
+
+fn FloatingButton(cx: Scope<FloatingButtonProps>) -> Element {
+    let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
+
+    cx.render(rsx! (
+        button {
+            class: "btn btn-primary btn-floating",
             width: "100%",
             border_radius: "6px",
             onclick: move |_| {
@@ -415,6 +479,28 @@ fn HamburgerButton(cx: Scope) -> Element {
                 size: 24,
                 color: "#62778c"
             }
+        }
+    ))
+}
+
+fn CloseBackButton(cx: Scope) -> Element {
+    let middle_view = use_shared_state::<IsOpened>(cx).unwrap();
+
+    let inbox_style = r#"
+    // width:60px;
+    cursor: pointer;
+    height: 24px;
+    "#;
+
+    cx.render(rsx! (
+        a {
+            style: "{inbox_style}",
+            border_radius: "6px",
+            onclick: move |_| {
+                *middle_view.write() = IsOpened::None;
+            },
+
+            MaterialIcon { name: "arrow_back", size: 24, color: "#62778c" }
         }
     ))
 }
