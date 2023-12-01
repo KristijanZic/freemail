@@ -16,7 +16,7 @@
 
 
 
-    /* color-scheme: only dark; */
+    /* color-scheme: only light; */
 }
 
 @media (prefers-color-scheme: light) {
@@ -25,6 +25,15 @@
         --main-background-color: #ffffff;
         --main-hover-color: #f0f4f7;
         --border-color: #e0e5eb;
+        --text-color: #000000;
+    }
+
+    :root.dark {
+        --header-background-color: #0e0f10;
+        --main-background-color: #000000;
+        --main-hover-color: rgba(231, 233, 234, 0.1);
+        --border-color: #2f3336;
+        --text-color: rgb(231, 233, 234);
     }
 }
 
@@ -34,8 +43,19 @@
         --main-background-color: #000000;
         --main-hover-color: rgba(231, 233, 234, 0.1);
         --border-color: #2f3336;
+        --text-color: rgb(231, 233, 234);
+    }
+
+    :root.light {
+        --header-background-color: #eaeff3;
+        --main-background-color: #ffffff;
+        --main-hover-color: #f0f4f7;
+        --border-color: #e0e5eb;
+        --text-color: #000000;
     }
 }
+
+
 
 /* [data-theme="light"]:root {
     --header-background-color: #eaeff3;
@@ -78,10 +98,6 @@ body {
     &:after {
         box-sizing: inherit;
     }
-}
-
-#main {
-    display: flex;
 }
 
 .login_screen {
