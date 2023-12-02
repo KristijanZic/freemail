@@ -1,7 +1,7 @@
 #![allow(non_snake_case)]
 
 use chrono::{DateTime, Duration, Utc};
-use dioxus::prelude::*;
+use dioxus::{html::h1, prelude::*};
 use dioxus_material_icons::{MaterialIcon, MaterialIconStylesheet, MaterialIconVariant};
 
 struct IsLoggedIn(bool);
@@ -15,6 +15,13 @@ fn main() {
 }
 
 #[derive(Clone, Copy)]
+enum ThemeMode {
+    System,
+    Light,
+    Dark,
+}
+
+#[derive(Clone, Copy)]
 enum IsOpened {
     EmailComposer,
     Email,
@@ -22,15 +29,70 @@ enum IsOpened {
 }
 
 fn App(cx: Scope) -> Element {
+    let create_eval = use_eval(cx);
     use_shared_state_provider(cx, || IsLoggedIn(true));
     use_shared_state_provider(cx, || IsMenuOpened(true));
     use_shared_state_provider(cx, || IsOpened::None);
 
     let is_logged_in_context = use_shared_state::<IsLoggedIn>(cx).unwrap();
 
+    let theme_mode = ThemeMode::System;
+
+    let eval_provider = use_eval(cx);
+
+    let _ = match theme_mode {
+        ThemeMode::Light => eval_provider(
+            r#"
+            const root = document.querySelector(':root');
+            root.classList.remove('dark');
+            root.classList.add('light');
+        "#,
+        ),
+        ThemeMode::Dark => eval_provider(
+            r#"
+            const root = document.querySelector(':root');
+            root.classList.remove('light');
+            root.classList.add('dark');
+        "#,
+        ),
+        ThemeMode::System => eval_provider(
+            r#"
+            const root = document.querySelector(':root');
+            root.classList.remove('dark');
+            root.classList.remove('light');
+        "#,
+        ),
+        // _ => todo!(),
+        // None => todo!(),
+    };
+
+    // let future = use_future(cx, (), |_| {
+    //     to_owned![eval_provider];
+
+    //     async move {
+    //         let eval = eval_provider(
+    //             r#"
+    //             const root = document.querySelector(':root');
+    //             root.classList.add('dark');
+    //         "#,
+    //         )
+    //         .unwrap();
+
+    //         eval.send("Hi from Rust!".into()).unwrap();
+    //         let res = eval.recv().await.unwrap();
+    //         println!("{:?}", eval.await);
+    //         res
+    //     }
+    // });
+
+    // match future.value() {
+    //     Some(v) => cx.render(rsx!( p { "{v}" } )),
+    //     _ => cx.render(rsx!( p { "hello" } )),
+    //     None => todo!(),
+    // }
+
     cx.render(rsx! {
         MaterialIconStylesheet { variant: MaterialIconVariant::Outlined }
-
         if is_logged_in_context.read().0 {
             rsx!{Inbox{}}
         } else {
@@ -171,7 +233,29 @@ fn Inbox(cx: Scope) -> Element {
                         MaterialIcon { name: "settings", size: 24, color: "#8da2b5" }
                     }
                 }
-                div { class: "inbox__submenu-list " }
+                div { class: "inbox__submenu-list ",
+                    ul {
+                        li {
+                            div { "Inbox" }
+                            div { "92" }
+                        }
+                        li { "Drafts" }
+                        li { "Sent" }
+                        li {
+                            div { "Starred" }
+                            div { "33" }
+                        }
+                        li { "Archive" }
+                        li { "Spam" }
+                        li { "Trash" }
+                        li {
+                            div { "All mail" }
+                            div { "92" }
+                        }
+                        li { "Folders" }
+                        li { "Labels" }
+                    }
+                }
             }
 
             main { class: "inbox__content {is_content_opened} {is_middle_view_opened}",
@@ -400,9 +484,98 @@ struct EmailReaderProps {
 fn EmailReader(cx: Scope<EmailReaderProps>) -> Element {
     cx.render(rsx!(
         div { class: "email",
-            div { class: "border_bottom", display: "flex", align_items: "center", padding: "16px",
+            div {
+                class: "border_bottom",
+                display: "flex",
+                align_items: "center",
+                padding: "16px 16px 16px 30px",
                 CloseBackButton {}
-                span { padding_left: "20px", "jane.doe@example.com" }
+                div { style: r#"zoom: 0.7; padding-top: 5px; padding-left:56px;"#, Avatar { is_online: true } }
+                span { style: r#"overflow:hidden;padding-left:20px; text-overflow: ellipsis;flex-wrap: nowrap; text-wrap: nowrap;"#,
+                    "jane.doe@example.com"
+                }
+                div {
+                    width: "100%",
+                    display: "flex",
+                    "flex-direction": "row",
+                    "flex-wrap": "nowrap",
+                    align_items: "center",
+                    justify_content: "space-between",
+                    a { cursor: "pointer", height: "20px", border_radius: "6px", padding: "0 10px",
+                        MaterialIcon { name: "shield", size: 20, color: "#62778c" }
+                    }
+                    div {
+                        a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                            MaterialIcon { name: "star", size: 24, color: "#62778c" }
+                        }
+                        a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                            MaterialIcon { name: "delete", size: 24, color: "#62778c" }
+                        }
+                    }
+                }
+            }
+            div { class: "border_bottom", padding: "10px 10px 10px 20px",
+                // div {
+                //     width: "100%",
+                //     display: "flex",
+                //     "flex-direction": "row",
+                //     "flex-wrap": "nowrap",
+                //     padding: "0 16px 0 16px",
+                //     label { "for": "from", "From" }
+                //     div { padding: "10px 16px 10px 16px", width: "100%", "jane.doe@example.com" }
+                // }
+
+                div {
+                    width: "100%",
+                    display: "flex",
+                    "flex-direction": "row",
+                    "flex-wrap": "nowrap",
+                    padding: "0 16px 0 16px",
+                    label { "for": "email", "To" }
+                    div {
+                        display: "flex",
+
+                        "flex-direction": "row",
+
+                        "flex-wrap": "nowrap",
+                        // min_height: "3em",
+                        padding: "10px 6px 10px 16px",
+                        width: "100%",
+                        "john.doe@example.com, john.doe@example.com"
+                    }
+                }
+            }
+
+            div { padding: "40px",
+                h2 { margin_top: "0", "New meeting with corporate tomorrow" }
+                pre { padding: "0", margin: "0", white_space: "pre-wrap", word_wrap: "break-word",
+                    "Lorem ipsum dolor, 
+                    
+                    \nSit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. 
+                    \nUt enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.
+                    
+                    \nSed ut perspiciatis!"
+                }
+            }
+            div {
+                class: "border_top",
+                width: "100%",
+                display: "flex",
+                "flex-direction": "row",
+                "flex-wrap": "nowrap",
+                align_items: "center",
+                padding: "16px 30px 24px 30px",
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "delete", size: 24, color: "#62778c" }
+                }
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "enhanced_encryption", size: 24, color: "#62778c" }
+                }
+                div { width: "200%" }
+                a { cursor: "pointer", height: "24px", border_radius: "6px", padding: "0 10px",
+                    MaterialIcon { name: "attach_file", size: 24, color: "#62778c" }
+                }
+                Button { title: String::from("Reply") }
             }
         }
     ))
