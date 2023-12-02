@@ -18,7 +18,7 @@
     html,
     body {
         background-color: var(--main-background-color);
-        color: rgb(231, 233, 234);
+        color: var(--text-color);
     }
 
     .border_top {
@@ -65,7 +65,7 @@
         background-color: var(--main-background-color);
 
         & textarea {
-            color: rgb(231, 233, 234);
+            color: var(--text-color);
             background-color: transparent;
         }
     }
